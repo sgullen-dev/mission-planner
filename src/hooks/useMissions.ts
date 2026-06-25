@@ -82,6 +82,7 @@ export function useMissions(): UseMissionsReturn {
     function handleBeforeUnload(e: BeforeUnloadEvent) {
       if (isDirtyRef.current) {
         e.preventDefault();
+        e.returnValue = '';
       }
     }
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -112,6 +113,9 @@ export function useMissions(): UseMissionsReturn {
       updatedAt: Date.now(),
     };
 
+    // Persist the draft immediately — new missions start as 'draft' status and
+    // are intentionally saved to localStorage right away so they survive a
+    // page reload. The dirty indicator stays clean until the user edits fields.
     setMissions(prev => [newMission, ...prev]);
     setSelectedMissionId(newMission.id);
     setWorkingCopy({ ...newMission });
