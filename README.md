@@ -1,78 +1,103 @@
 # Mission Planner — Maritime C2
 
-A mission planning application for autonomous surface vessels. Users create mission profiles, plot ordered waypoints on a Mapbox map, review the route connecting them, and save. Missions persist client-side via localStorage.
+A mission planning application for autonomous surface vessels. Users create mission
+profiles, plot ordered waypoints on a Mapbox map, edit the route, and save. Missions
+persist client-side via `localStorage`.
+
+Built with React 19, TypeScript, Vite, and `react-map-gl` (Mapbox GL JS).
 
 ## Setup
 
+A Mapbox access token is required. Create one at mapbox.com and add it to `.env` as
+`VITE_MAPBOX_TOKEN`. The token is read at build time and is not committed (`.env` is
+gitignored).
+
 ```bash
-git clone <repo-url>
-cd mission-planner
 npm install
-```
-
-Create a `.env` file from the example and add your Mapbox access token:
-
-```bash
-cp .env.example .env
-# Edit .env and set VITE_MAPBOX_TOKEN=your_token_here
-```
-
-Start the dev server:
-
-```bash
 npm run dev
 ```
 
-## How to Use
+## How to use
 
-1. **Task a Mission** — Click "+ Task a Mission" to create a new mission profile
-2. **Plot Waypoints** — Click "+ Add Waypoint" to enter placement mode, then click the map to drop a waypoint. Press ESC to cancel placement
-3. **Edit Waypoints** — Drag markers on the map to reposition. Click a waypoint row or marker for bidirectional selection. Rename waypoints and edit coordinates via decimal-degree inputs with live DDM preview
-4. **Reorder Waypoints** — Drag waypoints in the list using the grip handle to reorder the route sequence
-5. **Import / Export** — Export a mission as a JSON file for sharing, or import a JSON file to load waypoints into the current mission
-6. **Save** — Click "Save Profile" to persist changes to localStorage. "Discard" reverts to the last saved state. A browser prompt guards against closing the tab with unsaved changes
-7. **Filter & Manage** — Use the filter tabs (All / Active / Draft / Done) to find missions. Set status via the status chips in the editor or mission list
-8. **Route Colors** — Assign one of eight route colors per mission to distinguish overlapping routes on the map
-9. **Delete** — Remove a mission through the delete button, with a confirmation modal to prevent accidental loss
+- **Task a Mission** creates a new profile and opens it in the editor.
+- **Add Waypoint** enters placement mode; click the map to drop a waypoint, ESC cancels.
+- Drag markers to reposition, or edit coordinates directly in the waypoint row.
+- Click a waypoint row or its marker to select it (selection syncs both ways).
+- Drag the row grip handles to reorder the route sequence.
+- **Save Profile** persists changes; **Discard** reverts to the last saved state.
+- Filter the mission list by status, or export/import a mission as JSON.
 
-## Design Approach
+## Required features
 
-### Layout & Navigation
-- Follows a **Google Maps drill-in pattern**: a persistent left rail shows the mission list, and selecting a mission drills into an inline editor — no page transitions, no router
-- State-driven UI keeps all interaction within a single view for fast context switching
+| Requirement | Implementation |
+|---|---|
+| Mission list | Left rail listing all missions with name, status, waypoint count, and route distance. Create and select from the list. |
+| Mission editor | Mapbox map with numbered markers connected by a route line. Add (placement mode), move (drag or coordinate entry), delete, and rename waypoints. |
+| Save mission | Explicit Save/Discard. Persisted to `localStorage`. Unsaved changes shown via an amber indicator; a `beforeunload` guard warns on tab close while dirty. |
+| Responsive UI | Two-pane desktop layout; on mobile the rail becomes a bottom sheet with collapsed / half / full detents, keeping the map unobstructed. |
 
-### Visual Language
-- **Dark naval C2 palette** (`#0A0F1A` background, `#2FD8CF` accent) creates a console aesthetic appropriate for maritime command-and-control software
-- **Red is reserved strictly for destructive actions and alert status** — it is never used decoratively, following C2 convention where color carries operational meaning
-- **Two-font design system** using IBM Plex Sans and IBM Plex Mono for clear hierarchy between labels and data
+## Bonus features (from the brief)
 
-### Waypoint Editing
-- Waypoints support **inline name editing**, **drag-and-drop reordering** (via dnd-kit), and **direct coordinate entry** with decimal-degree inputs and live DDM preview
-- Bidirectional selection syncs clicks between the waypoint list and map markers
-- Coordinate validation enforces lat [-90, 90] and lng [-180, 180], rounding to four decimal places
+- **Waypoint reordering** via drag-and-drop (`@dnd-kit`), reflected live in the route.
+- **Mission status** indicators (Draft / Active / Complete) settable from list and editor.
+- **Empty and error states**: a first-run empty state, an empty-filter state, a
+  `localStorage` safe-parse fallback, and a React error boundary around the app.
+- **Import / export** missions as JSON, with fresh UUIDs assigned on import to avoid
+  collisions.
 
-### Data Management
-- **Dirty state tracking** with deep equality comparison prevents accidental data loss
-- Unsaved changes show a pulsing amber indicator; saved state flashes a green timestamp ("Saved · HH:MM UTC")
-- Confirmation modals guard destructive actions (delete, discard unsaved changes)
-- **Import/Export** enables sharing missions as JSON files with fresh UUIDs assigned on import to avoid collisions
+## Additions for this domain
 
-### Mobile Experience
-- On screens below 768px, the desktop rail is replaced with a **custom bottom sheet** designed for ease of use on small screens
-- The sheet has **three discrete height states** — collapsed (7vh), half (54vh), and full (92vh) — toggled by tapping the drag handle
-- In **collapsed mode**, a persistent summary bar shows the active mission count, current mission name, or placement instructions so the user always has context without obscuring the map
-- **Placement mode automatically collapses the sheet** to maximize map visibility for precise waypoint tapping, then re-expands once the waypoint is placed
-- Editing a mission expands the sheet to full height; pressing back collapses it to the half-height list view
-- This map-first approach ensures the most important interaction surface — the map — is never blocked by UI chrome on small devices
+A few things outside the brief that fit a maritime C2 tool and were low-cost to add:
 
-## Tech Stack
+- **Nautical vocabulary and coordinates.** UI copy uses mission/waypoint language;
+  coordinates render as degrees-decimal-minutes with hemisphere suffix
+  (e.g. `34°02.4′N 119°27.5′W`), the nautical convention.
+- **Great-circle distance.** Haversine distance per leg in the waypoint list and total
+  route distance (in nautical miles) in the editor and list, recomputed live as the
+  route changes. Distance is always derived, never stored.
+- **Nautical scale bar** on the map, computed from zoom and latitude.
+- **Per-mission route colors** so overlapping active routes stay distinguishable on the map.
+- **Dark naval palette.** Red is reserved strictly for destructive and alert states, so
+  color carries operational meaning rather than decoration.
 
-- **React 19** with TypeScript and Vite
-- **Tailwind CSS 4** for utility styling alongside inline styles for precision control
-- **Mapbox GL / react-map-gl** for vector mapping and GeoJSON route rendering
-- **@dnd-kit** for accessible drag-and-drop waypoint reordering
+## Design decisions
 
-## What I'd Improve With More Time
+- **Google Maps drill-in pattern.** A single left rail switches between the mission list
+  and the editor with no router and no page transitions, keeping interaction in one view.
+- **Working copy / saved version split.** The editor mutates a working copy; dirty state
+  is a structural comparison against the saved version, so reverting an edit clears the
+  dirty flag correctly rather than latching on any keystroke.
+- **Derived map data.** The route is a GeoJSON `LineString` built from the ordered
+  waypoints; distances are derived the same way. Nothing redundant is stored on the model.
 
-- **Light theme toggle** — the color tokens are already CSS custom properties, so swapping is straightforward
-- **Keyboard accessibility pass** — full ARIA roles, focus management, screen reader testing
+## Architecture
+
+```
+src/
+├─ App.tsx                 # top-level state wiring
+├─ hooks/useMissions.ts    # mission CRUD, working-copy/dirty logic, persistence
+├─ lib/
+│  ├─ types.ts             # Mission / Waypoint / status / color types
+│  ├─ storage.ts           # safe localStorage read/write
+│  ├─ coords.ts            # decimal ↔ DDM formatting
+│  └─ distance.ts          # haversine + route distance
+└─ components/             # Rail, MissionList, MissionEditor, WaypointRow,
+                           # MapCanvas, MobileSheet, SaveBar, modals, states
+```
+
+## Assumptions
+
+- Client-side only - no backend, authentication, or collaboration.
+- Single user; missions live in `localStorage` and are lost if browser data is cleared.
+- A newly created mission persists immediately as a draft; Save commits subsequent edits.
+- Mapbox token is user-provided.
+
+## What I'd add in production
+
+- Backend persistence and auth, replacing `localStorage`.
+- A light theme — the palette is already tokenized as CSS custom properties, so the
+  swap is mechanical.
+- Vehicle simulation: animate a vessel along the route with progress and ETA from the
+  per-leg distances already computed.
+- A full keyboard-accessibility pass: ARIA roles, focus management, screen-reader testing.
+- Coordinate validation against navigable water and waypoint-to-waypoint feasibility.
