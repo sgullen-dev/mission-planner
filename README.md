@@ -70,6 +70,27 @@ A few things outside the brief that fit a maritime C2 tool and were low-cost to 
 - **Derived map data.** The route is a GeoJSON `LineString` built from the ordered
   waypoints; distances are derived the same way. Nothing redundant is stored on the model.
 
+## Design mock-ups
+
+- **Iterative approach.** I started with a theme and design principals to follow, and 
+  then iterated on them once it was living in code and I could judge the look and feel.
+- The design documents are linked below.
+
+<details>
+<summary>Documents</summary>
+
+**Visual Identity**
+![Colors and Visual Identity](./docs/design_color_components.jpg)
+
+**Desktop**
+![Desktop Display](./docs/desktop_design.jpg)
+![Desktop Editor](./docs/desktop_design_with_changes.jpg)
+
+**Mobile**
+![Mobile](./docs/phone_design.jpg)
+
+</details>
+
 ## Architecture
 
 ```
@@ -95,8 +116,8 @@ src/
 ## What I'd add in production
 
 - Backend persistence and auth, replacing `localStorage`.
-- A light theme — the palette is already tokenized as CSS custom properties, so the
-  swap is mechanical.
+- A light theme - the palette is already tokenized as CSS custom properties, so the
+  swap is simple.
 - Vehicle simulation: animate a vessel along the route with progress and ETA from the
   per-leg distances already computed.
 - A full keyboard-accessibility pass: ARIA roles, focus management, screen-reader testing.
