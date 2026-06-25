@@ -178,7 +178,7 @@ export default function MapCanvas({
         */}
         {isEditing && editingRouteGeoJSON && (
           <Source id="route-editing" type="geojson" data={editingRouteGeoJSON}>
-            <Layer {...makeRouteStyle('route-editing', editingColor)} />
+            <Layer {...makeRouteStyle('route-editing-line', editingColor)} />
           </Source>
         )}
 
@@ -261,7 +261,7 @@ function BackgroundMission({ mission, routeGeoJSON }: BackgroundMissionProps) {
     <>
       {routeGeoJSON && (
         <Source id={`bg-route-${mission.id}`} type="geojson" data={routeGeoJSON}>
-          <Layer {...makeRouteStyle(`bg-route-${mission.id}`, color, 0.9, 2.2)} />
+          <Layer {...makeRouteStyle(`bg-route-${mission.id}-line`, color, 0.9, 2.2)} />
         </Source>
       )}
       {mission.waypoints.map((waypoint, index) => (
