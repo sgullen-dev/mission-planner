@@ -9,6 +9,8 @@ interface WaypointRowProps {
   waypoint: Waypoint;
   /** 1-based sequence number */
   sequenceNumber: number;
+  /** Formatted leg distance from the previous waypoint, or null for the first waypoint */
+  legLabel: string | null;
   isSelected: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
@@ -48,6 +50,7 @@ function parseCoord(input: string): number | null {
 export default function WaypointRow({
   waypoint,
   sequenceNumber,
+  legLabel,
   isSelected,
   onSelect,
   onDelete,
@@ -215,6 +218,9 @@ export default function WaypointRow({
             }}
           >
             {coordsString}
+            {legLabel && (
+              <span style={{ marginLeft: 6 }}>↳ {legLabel}</span>
+            )}
           </div>
         </div>
 
@@ -226,9 +232,6 @@ export default function WaypointRow({
           }}
           className="flex-shrink-0 cursor-pointer font-mono"
           style={{
-            fontSize: 14,
-            fontWeight: 600,
-            lineHeight: 1,
             color: isSelected ? '#9DB0C6' : '#6A7E97',
             background: 'none',
             border: 'none',
@@ -246,7 +249,10 @@ export default function WaypointRow({
           }}
           title="Delete waypoint"
         >
-          ✕
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
         </button>
       </div>
 

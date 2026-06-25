@@ -27,7 +27,7 @@ npm run dev
 
 1. **Task a Mission** — Click "+ Task a Mission" to create a new mission profile
 2. **Plot Waypoints** — Click "+ Add Waypoint" to enter placement mode, then click the map to drop a waypoint. Press ESC to cancel placement
-3. **Edit Waypoints** — Drag markers on the map to reposition. Click a waypoint row or marker for bidirectional selection. Rename waypoints inline and edit coordinates directly via decimal-degree inputs with live DDM preview
+3. **Edit Waypoints** — Drag markers on the map to reposition. Click a waypoint row or marker for bidirectional selection. Rename waypoints and edit coordinates via decimal-degree inputs with live DDM preview
 4. **Reorder Waypoints** — Drag waypoints in the list using the grip handle to reorder the route sequence
 5. **Import / Export** — Export a mission as a JSON file for sharing, or import a JSON file to load waypoints into the current mission
 6. **Save** — Click "Save Profile" to persist changes to localStorage. "Discard" reverts to the last saved state. A browser prompt guards against closing the tab with unsaved changes
@@ -45,17 +45,6 @@ npm run dev
 - **Dark naval C2 palette** (`#0A0F1A` background, `#2FD8CF` accent) creates a console aesthetic appropriate for maritime command-and-control software
 - **Red is reserved strictly for destructive actions and alert status** — it is never used decoratively, following C2 convention where color carries operational meaning
 - **Two-font design system** using IBM Plex Sans and IBM Plex Mono for clear hierarchy between labels and data
-
-### Maritime Domain Conventions
-- All UI copy uses **maritime/C2 vocabulary**: "Task a Mission" (not "New Mission"), "Mission Profiles," "Waypoints," "Discard," "Save Profile"
-- Coordinates display as **degrees-decimal-minutes with hemisphere suffix** (e.g., `34°02.4'N 119°27.5'W`), matching nautical convention
-- Each mission is assigned an auto-generated mission code (e.g., `MSN-4471`)
-
-### Map Interactions
-- Interactive Mapbox map with draggable waypoint markers and real-time route rendering via GeoJSON LineString
-- Placement mode shows a crosshair cursor and a status banner ("DROP WAYPOINT N — click to plot, ESC to cancel")
-- Selecting a waypoint or editing a mission triggers a fly-to animation to center the relevant area
-- Active missions from the list render as background routes while editing another mission
 
 ### Waypoint Editing
 - Waypoints support **inline name editing**, **drag-and-drop reordering** (via dnd-kit), and **direct coordinate entry** with decimal-degree inputs and live DDM preview
@@ -83,16 +72,7 @@ npm run dev
 - **Mapbox GL / react-map-gl** for vector mapping and GeoJSON route rendering
 - **@dnd-kit** for accessible drag-and-drop waypoint reordering
 
-## Assumptions
-
-- Client-side only — no backend, no authentication
-- Single user — no collaboration or conflict resolution
-- Missions are stored in localStorage; clearing browser data deletes all missions
-- Mapbox token is user-provided via `.env`
-
 ## What I'd Improve With More Time
 
 - **Light theme toggle** — the color tokens are already CSS custom properties, so swapping is straightforward
-- **Great-circle distance** — haversine per leg + mission total in nautical miles reinforces the maritime domain
-- **Map chrome** — scale bar, zoom-level overlay token
 - **Keyboard accessibility pass** — full ARIA roles, focus management, screen reader testing

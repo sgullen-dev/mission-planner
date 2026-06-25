@@ -9,11 +9,12 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { haversineNm, routeDistanceNm, formatNm } from '../lib/distance';
 import StatusDropdown from './StatusDropdown';
 import WaypointRow from './WaypointRow';
 import SaveBar from './SaveBar';
@@ -61,10 +62,25 @@ export default function MissionEditor({
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
+  // Track which waypoint was selected before a drag started
+  const preDragSelectionRef = useRef<string | null>(null);
+
+  function handleDragStart(_event: DragStartEvent) {
+    preDragSelectionRef.current = selectedWaypointId;
+    if (selectedWaypointId) {
+      onSelectWaypoint(selectedWaypointId); // toggles off (deselects)
+    }
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       onReorderWaypoints(active.id as string, over.id as string);
+    }
+    // Re-select the waypoint that was selected before the drag
+    if (preDragSelectionRef.current) {
+      onSelectWaypoint(preDragSelectionRef.current);
+      preDragSelectionRef.current = null;
     }
   }
 
@@ -211,6 +227,21 @@ export default function MissionEditor({
         </div>
       </div>
 
+      {/* Waypoint count + total distance */}
+      <div
+        className="font-mono"
+        style={{
+          padding: '8px 16px 0',
+          fontSize: 10.5,
+          fontWeight: 500,
+          color: '#506178',
+          letterSpacing: 0.3,
+        }}
+      >
+        {mission.waypoints.length} waypoint{mission.waypoints.length !== 1 ? 's' : ''}
+        {mission.waypoints.length >= 2 && ` · ${formatNm(routeDistanceNm(mission.waypoints))}`}
+      </div>
+
       {/* Waypoint list — scrollable, drag-and-drop sortable */}
       <div
         className="flex-1 overflow-y-auto flex flex-col"
@@ -229,6 +260,7 @@ export default function MissionEditor({
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={waypointIds} strategy={verticalListSortingStrategy}>
@@ -237,6 +269,7 @@ export default function MissionEditor({
                   key={waypoint.id}
                   waypoint={waypoint}
                   sequenceNumber={index + 1}
+                  legLabel={index > 0 ? formatNm(haversineNm(mission.waypoints[index - 1], waypoint)) : null}
                   isSelected={waypoint.id === selectedWaypointId}
                   onSelect={onSelectWaypoint}
                   onDelete={onDeleteWaypoint}
@@ -247,29 +280,29 @@ export default function MissionEditor({
             </SortableContext>
           </DndContext>
         )}
-      </div>
 
-      {/* Add waypoint button */}
-      <div style={{ padding: '10px 16px', borderTop: BORDER_SUBTLE }}>
-        <button
-          onClick={onAddWaypoint}
-          disabled={isPlacingWaypoint}
-          className="font-sans cursor-pointer w-full"
-          style={{
-            padding: '9px 12px',
-            fontSize: 12,
-            fontWeight: 600,
-            borderRadius: 7,
-            border: isPlacingWaypoint
-              ? '1px dashed rgba(47,216,207,0.5)'
-              : '1px dashed rgba(255,255,255,0.12)',
-            background: isPlacingWaypoint ? 'rgba(47,216,207,0.08)' : 'transparent',
-            color: isPlacingWaypoint ? '#2FD8CF' : '#9DB0C6',
-            transition: 'all 0.15s',
-          }}
-        >
-          {isPlacingWaypoint ? 'Click map to plot waypoint…' : '+ Add Waypoint'}
-        </button>
+        {/* Add waypoint button — inline after the last waypoint */}
+        <div style={{ padding: '4px 8px' }}>
+          <button
+            onClick={onAddWaypoint}
+            disabled={isPlacingWaypoint}
+            className="font-sans cursor-pointer w-full"
+            style={{
+              padding: '9px 12px',
+              fontSize: 12,
+              fontWeight: 600,
+              borderRadius: 7,
+              border: isPlacingWaypoint
+                ? '1px dashed rgba(47,216,207,0.5)'
+                : '1px dashed rgba(255,255,255,0.12)',
+              background: isPlacingWaypoint ? 'rgba(47,216,207,0.08)' : 'transparent',
+              color: isPlacingWaypoint ? '#2FD8CF' : '#9DB0C6',
+              transition: 'all 0.15s',
+            }}
+          >
+            {isPlacingWaypoint ? 'Click map to plot waypoint…' : '+ Add Waypoint'}
+          </button>
+        </div>
       </div>
 
       {/* Import / Export JSON */}

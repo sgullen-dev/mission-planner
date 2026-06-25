@@ -59,6 +59,10 @@ export default function MapCanvas({
   // so the map doesn't chase the marker during a drag.
   const isDraggingRef = useRef(false);
 
+  // Track map view state for the scale bar
+  const [mapZoom, setMapZoom] = useState(9);
+  const [mapLat, setMapLat] = useState(33.8);
+
   const isEditing = editingMission !== null;
   const editingWaypoints = editingMission?.waypoints ?? [];
   const editingColor = editingMission?.color ?? '#2FD8CF';
@@ -156,6 +160,7 @@ export default function MapCanvas({
         style={{ width: '100%', height: '100%' }}
         mapStyle={MAP_STYLE}
         onClick={handleMapClick}
+        onMove={(e) => { setMapZoom(e.viewState.zoom); setMapLat(e.viewState.latitude); }}
       >
         {/*
           When NOT editing: show all active missions as background routes.
@@ -219,6 +224,8 @@ export default function MapCanvas({
         </div>
       )}
 
+      <NauticalScaleBar zoom={mapZoom} lat={mapLat} />
+
       {/* "No active route" hint when nothing to show */}
       {!isEditing && activeMissions.length === 0 && (
         <div
@@ -238,6 +245,86 @@ export default function MapCanvas({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ---- Nautical scale bar ---- */
+
+const SCALE_BAR_WIDTH = 200; // fixed pixel width
+const NM_PER_METER = 1 / 1852;
+
+/** Nice round distances to snap to (in nm) */
+const NICE_NM = [
+  0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000,
+];
+
+/** Segments: 25%, 25%, 50% of the total bar */
+const SEG_FRACTIONS = [0.25, 0.25, 0.5];
+
+function formatScaleLabel(nm: number): string {
+  if (nm === 0) return '0';
+  if (nm === Math.round(nm)) return `${nm}`;
+  return nm.toFixed(1);
+}
+
+function NauticalScaleBar({ lat, zoom }: { lat: number; zoom: number }) {
+  const metersPerPx =
+    (156543.03 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
+  const nmPerPx = metersPerPx * NM_PER_METER;
+  const rawNm = nmPerPx * SCALE_BAR_WIDTH;
+
+  let chosenNm = NICE_NM[0];
+  for (const n of NICE_NM) {
+    if (n <= rawNm) chosenNm = n;
+    else break;
+  }
+
+  const barPx = chosenNm / nmPerPx;
+
+  // Tick values at each boundary: 0, 25%, 50%, 100%
+  const ticks = [0, 0.25, 0.5, 1].map(f => chosenNm * f);
+
+  const labelStyle = { fontSize: 9, fontWeight: 500, color: '#506178' } as const;
+
+  return (
+    <div
+      className="absolute font-mono pointer-events-none"
+      style={{ bottom: 6, left: '50%', transform: 'translateX(-50%)' }}
+    >
+      {/* Bar + nm label inline */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', height: 6, borderRadius: 1, overflow: 'hidden' }}>
+          {SEG_FRACTIONS.map((frac, i) => (
+            <div
+              key={i}
+              style={{
+                width: barPx * frac,
+                background: i % 2 === 0 ? '#9DB0C6' : '#3E4F66',
+              }}
+            />
+          ))}
+        </div>
+        <span style={{ ...labelStyle }}>nm</span>
+      </div>
+
+      {/* Tick labels below the bar */}
+      <div style={{ width: barPx, position: 'relative', height: 14, marginTop: 2 }}>
+        {ticks.map((val, i) => (
+          <span
+            key={i}
+            style={{
+              ...labelStyle,
+              position: 'absolute',
+              top: 0,
+              left: (val / chosenNm) * barPx,
+              transform: i === ticks.length - 1 ? 'translateX(-100%)' : i === 0 ? 'none' : 'translateX(-50%)',
+            }}
+          >
+            {formatScaleLabel(val)}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -282,7 +369,6 @@ function BackgroundMission({ mission, routeGeoJSON }: BackgroundMissionProps) {
               fontSize: 11,
               fontWeight: 600,
               color: color,
-              boxShadow: `0 0 0 4px ${color}1A`,
             }}
           >
             {index + 1}
