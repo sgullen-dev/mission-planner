@@ -1,4 +1,4 @@
-# Mission Planner — Maritime C2
+# Mission Planner | Maritime C2
 
 A mission planning application for autonomous surface vessels. Users create mission
 profiles, plot ordered waypoints on a Mapbox map, edit the route, and save. Missions
