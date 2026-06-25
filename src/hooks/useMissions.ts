@@ -92,16 +92,12 @@ export function useMissions(): UseMissionsReturn {
   /* ---- List actions ---- */
 
   const createMission = useCallback(() => {
-    // Find the next available name: "NEW MISSION", "NEW MISSION 1", "NEW MISSION 2", etc.
     const existingNames = new Set(missions.map(m => m.name));
-    let name = 'NEW MISSION';
-    if (existingNames.has(name)) {
-      let counter = 1;
-      while (existingNames.has(`NEW MISSION ${counter}`)) {
-        counter++;
-      }
-      name = `NEW MISSION ${counter}`;
+    let counter = 1;
+    while (existingNames.has(`New Mission ${counter.toString().padStart(2, '0')}`)) {
+      counter++;
     }
+    const name = `New Mission ${counter.toString().padStart(2, '0')}`;
 
     const newMission: Mission = {
       id: crypto.randomUUID(),

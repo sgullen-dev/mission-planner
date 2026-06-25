@@ -77,7 +77,7 @@ export default function Rail(props: RailProps) {
             className="font-mono"
             style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: 1.5, color: '#5C7186' }}
           >
-            MARITIME C2 · v2.4
+            MARITIME C2
           </div>
         </div>
       </div>

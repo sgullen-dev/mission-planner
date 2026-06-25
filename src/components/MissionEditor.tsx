@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Mission, MissionStatus, RouteColor } from '../lib/types';
 import { ROUTE_COLORS } from '../lib/types';
-import { BORDER_SUBTLE, DROPDOWN_STYLE } from '../lib/constants';
+import { BORDER_SUBTLE, DROPDOWN_STYLE, INPUT_STYLE, inputFocusHandlers } from '../lib/constants';
 import {
   DndContext,
   closestCenter,
@@ -129,18 +129,16 @@ export default function MissionEditor({
         <input
           type="text"
           value={mission.name}
-          onChange={(e) => onUpdateName(e.target.value.toUpperCase())}
+          onChange={(e) => onUpdateName(e.target.value)}
           className="font-sans w-full"
           style={{
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            fontSize: 15,
+            ...INPUT_STYLE,
+            fontSize: 14,
             fontWeight: 600,
             color: '#E7EEF7',
-            padding: 0,
             marginBottom: 8,
           }}
+          {...inputFocusHandlers()}
         />
 
         {/* Code + status dropdown + color picker */}
