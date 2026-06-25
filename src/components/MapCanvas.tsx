@@ -231,17 +231,13 @@ export default function MapCanvas({
         <div
           className="absolute font-mono pointer-events-none"
           style={{
-            top: '50%',
+            bottom: 38,
             left: '50%',
-            transform: 'translate(-50%, -50%)',
-            textAlign: 'center',
+            transform: 'translateX(-50%)',
           }}
         >
           <div style={{ fontSize: 12, fontWeight: 500, letterSpacing: 2, color: '#3E4F66', textTransform: 'uppercase' as const }}>
             No active route
-          </div>
-          <div className="font-sans" style={{ fontSize: 12.5, color: '#52647C', marginTop: 6 }}>
-            Select a mission to view its route
           </div>
         </div>
       )}
