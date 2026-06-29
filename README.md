@@ -4,7 +4,9 @@ A mission planning application for autonomous surface vessels. Users create miss
 profiles, plot ordered waypoints on a Mapbox map, edit the route, and save. Missions
 persist client-side via `localStorage`.
 
-Built with React 19, TypeScript, Vite, and `react-map-gl` (Mapbox GL JS) using WebStorm and Claude Code integration.
+Built with React 19, TypeScript, Vite, and `react-map-gl` (Mapbox GL JS).
+
+**[Live demo](https://mission-planner-sigma.vercel.app/)** — deployed on Vercel.
 
 ## Setup
 
@@ -96,11 +98,18 @@ src/
                            # MapCanvas, MobileSheet, SaveBar, modals, states
 ```
 
+## Notes on tooling
+
+Built in WebStorm with Claude Code. I worked design-first, a visual mockup
+established the layout and palette, then a written spec drove implementation,
+which I reviewed and refined. AI handled scaffolding and boilerplate. The
+architecture, scope decisions, and interaction logic were mine.
+
 ## What I'd add in production
 
 - Backend persistence and auth, replacing `localStorage`.
 - Unit testing coverage
-- A light theme - the palette is already tokenized as CSS custom properties, so the
+- A light theme: the palette is already tokenized as CSS custom properties, so the
   swap is simple.
 - Vehicle simulation: animate a vessel along the route with progress and ETA from the
   per-leg distances already computed.
