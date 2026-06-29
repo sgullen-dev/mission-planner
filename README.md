@@ -4,7 +4,7 @@ A mission planning application for autonomous surface vessels. Users create miss
 profiles, plot ordered waypoints on a Mapbox map, edit the route, and save. Missions
 persist client-side via `localStorage`.
 
-Built with React 19, TypeScript, Vite, and `react-map-gl` (Mapbox GL JS).
+Built with React 19, TypeScript, Vite, and `react-map-gl` (Mapbox GL JS) using WebStorm and Claude Code integration.
 
 ## Setup
 
@@ -20,7 +20,7 @@ npm run dev
 ## How to use
 
 - **Task a Mission** creates a new profile and opens it in the editor.
-- **Add Waypoint** enters placement mode; click the map to drop a waypoint, ESC cancels.
+- **Add Waypoint** enters placement mode - click the map to drop a waypoint, ESC cancels.
 - Drag markers to reposition, or edit coordinates directly in the waypoint row.
 - Click a waypoint row or its marker to select it (selection syncs both ways).
 - Drag the row grip handles to reorder the route sequence.
@@ -42,33 +42,23 @@ npm run dev
 - **Mission status** indicators (Draft / Active / Complete) settable from list and editor.
 - **Empty and error states**: a first-run empty state, an empty-filter state, a
   `localStorage` safe-parse fallback, and a React error boundary around the app.
-- **Import / export** missions as JSON, with fresh UUIDs assigned on import to avoid
-  collisions.
+- **Import / export** missions as JSON.
 
 ## Additions for this domain
 
 A few things outside the brief that fit a maritime C2 tool and were low-cost to add:
 
-- **Nautical vocabulary and coordinates.** UI copy uses mission/waypoint language;
-  coordinates render as degrees-decimal-minutes with hemisphere suffix
-  (e.g. `34°02.4′N 119°27.5′W`), the nautical convention.
 - **Great-circle distance.** Haversine distance per leg in the waypoint list and total
-  route distance (in nautical miles) in the editor and list, recomputed live as the
-  route changes. Distance is always derived, never stored.
+  route distance (in nautical miles) in the editor and list.
 - **Nautical scale bar** on the map, computed from zoom and latitude.
 - **Per-mission route colors** so overlapping active routes stay distinguishable on the map.
-- **Dark naval palette.** Red is reserved strictly for destructive and alert states, so
-  color carries operational meaning rather than decoration.
 
 ## Design decisions
 
 - **Google Maps drill-in pattern.** A single left rail switches between the mission list
   and the editor with no router and no page transitions, keeping interaction in one view.
-- **Working copy / saved version split.** The editor mutates a working copy; dirty state
-  is a structural comparison against the saved version, so reverting an edit clears the
-  dirty flag correctly rather than latching on any keystroke.
-- **Derived map data.** The route is a GeoJSON `LineString` built from the ordered
-  waypoints; distances are derived the same way. Nothing redundant is stored on the model.
+- **Dark naval palette.** Red is reserved strictly for destructive and alert states, so
+  color carries operational meaning rather than decoration.
 
 ## Design mock-ups
 
@@ -106,16 +96,10 @@ src/
                            # MapCanvas, MobileSheet, SaveBar, modals, states
 ```
 
-## Assumptions
-
-- Client-side only - no backend, authentication, or collaboration.
-- Single user; missions live in `localStorage` and are lost if browser data is cleared.
-- A newly created mission persists immediately as a draft; Save commits subsequent edits.
-- Mapbox token is user-provided.
-
 ## What I'd add in production
 
 - Backend persistence and auth, replacing `localStorage`.
+- Unit testing coverage
 - A light theme - the palette is already tokenized as CSS custom properties, so the
   swap is simple.
 - Vehicle simulation: animate a vessel along the route with progress and ETA from the
