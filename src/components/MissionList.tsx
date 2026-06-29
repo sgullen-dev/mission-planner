@@ -1,21 +1,11 @@
 import { useState } from 'react';
-import type { Mission, MissionStatus } from '../lib/types';
+import type { MissionStatus } from '../lib/types';
 import { BORDER_SUBTLE } from '../lib/constants';
+import { useMissionContext } from '../context/MissionContext';
 import MissionListItem from './MissionListItem';
 import EmptyState from './EmptyState';
 
 type FilterValue = 'all' | MissionStatus;
-
-interface MissionListProps {
-  missions: Mission[];
-  selectedMissionId: string | null;
-  onSelect: (id: string) => void;
-  onEdit: (id: string) => void;
-  onFocus: (id: string) => void;
-  onDelete: (id: string) => void;
-  onSetStatus: (id: string, status: MissionStatus) => void;
-  onCreate: () => void;
-}
 
 const FILTERS: { label: string; value: FilterValue }[] = [
   { label: 'All', value: 'all' },
@@ -24,16 +14,18 @@ const FILTERS: { label: string; value: FilterValue }[] = [
   { label: 'Done', value: 'complete' },
 ];
 
-export default function MissionList({
-  missions,
-  selectedMissionId,
-  onSelect,
-  onEdit,
-  onFocus,
-  onDelete,
-  onSetStatus,
-  onCreate,
-}: MissionListProps) {
+export default function MissionList() {
+  const {
+    missions,
+    selectedMissionId,
+    onSelectMission,
+    onEditMission,
+    onFocusMission,
+    onDeleteMission,
+    onSetMissionStatus,
+    onCreateMission,
+  } = useMissionContext();
+
   const [activeFilter, setActiveFilter] = useState<FilterValue>('all');
 
   // Filter missions based on the active filter tab
@@ -43,7 +35,7 @@ export default function MissionList({
 
   // If there are no missions at all, show the empty state
   if (missions.length === 0) {
-    return <EmptyState onCreateMission={onCreate} />;
+    return <EmptyState onCreateMission={onCreateMission} />;
   }
 
   return (
@@ -101,11 +93,11 @@ export default function MissionList({
               key={mission.id}
               mission={mission}
               isSelected={mission.id === selectedMissionId}
-              onSelect={onSelect}
-              onEdit={onEdit}
-              onFocus={onFocus}
-              onDelete={onDelete}
-              onSetStatus={onSetStatus}
+              onSelect={onSelectMission}
+              onEdit={onEditMission}
+              onFocus={onFocusMission}
+              onDelete={onDeleteMission}
+              onSetStatus={onSetMissionStatus}
             />
           ))
         )}
@@ -114,7 +106,7 @@ export default function MissionList({
       {/* Create mission button */}
       <div style={{ padding: '12px 16px', borderTop: BORDER_SUBTLE }}>
         <button
-          onClick={onCreate}
+          onClick={onCreateMission}
           className="font-sans cursor-pointer w-full flex items-center justify-center gap-1.5"
           style={{
             fontSize: 12.5,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { Mission, MissionStatus, RouteColor } from '../lib/types';
+import { useMissionContext, MissionContext } from '../context/MissionContext';
 import MissionList from './MissionList';
 import MissionEditor from './MissionEditor';
 
@@ -10,34 +10,6 @@ import MissionEditor from './MissionEditor';
 const DETENT_COLLAPSED = 7;
 const DETENT_HALF = 54;
 const DETENT_FULL = 92;
-
-interface MobileSheetProps {
-  missions: Mission[];
-  selectedMissionId: string | null;
-  onSelectMission: (id: string) => void;
-  onEditMission: (id: string) => void;
-  onFocusMission: (id: string) => void;
-  onDeleteMission: (id: string) => void;
-  onSetMissionStatus: (id: string, status: MissionStatus) => void;
-  onCreateMission: () => void;
-  workingCopy: Mission | null;
-  isDirty: boolean;
-  selectedWaypointId: string | null;
-  onBack: () => void;
-  onUpdateName: (name: string) => void;
-  onUpdateStatus: (status: MissionStatus) => void;
-  onUpdateColor: (color: RouteColor) => void;
-  onSelectWaypoint: (id: string) => void;
-  onRenameWaypoint: (id: string, name: string) => void;
-  onUpdateWaypointCoords: (id: string, lat: number, lng: number) => void;
-  onDeleteWaypoint: (id: string) => void;
-  onReorderWaypoints: (activeId: string, overId: string) => void;
-  onImportMission: (data: Partial<import('../lib/types').Mission>) => void;
-  onAddWaypoint: () => void;
-  onSave: () => void;
-  onDiscard: () => void;
-  isPlacingWaypoint: boolean;
-}
 
 /**
  * Mobile bottom sheet with three discrete states driven by user actions:
@@ -51,21 +23,23 @@ interface MobileSheetProps {
  *               placing a waypoint re-expands to Full
  *               "‹ Back" returns to Half
  */
-export default function MobileSheet(props: MobileSheetProps) {
+export default function MobileSheet() {
+  const ctx = useMissionContext();
+  const { missions, workingCopy, isPlacingWaypoint } = ctx;
+
   const [detent, setDetent] = useState<number>(DETENT_COLLAPSED);
-  // Remember the last open position so we can restore it when toggling
   const [lastOpenDetent, setLastOpenDetent] = useState<number>(DETENT_HALF);
 
-  const isEditing = props.workingCopy !== null;
+  const isEditing = workingCopy !== null;
 
   const activeMissionCount = useMemo(
-    () => props.missions.filter(m => m.status === 'active').length,
-    [props.missions]
+    () => missions.filter(m => m.status === 'active').length,
+    [missions]
   );
 
   // When a mission is opened for editing, expand to full
   useEffect(() => {
-    if (isEditing && !props.isPlacingWaypoint) {
+    if (isEditing && !isPlacingWaypoint) {
       setDetent(DETENT_FULL);
       setLastOpenDetent(DETENT_FULL);
     }
@@ -73,44 +47,43 @@ export default function MobileSheet(props: MobileSheetProps) {
 
   // When entering placement mode, collapse so the map is visible
   useEffect(() => {
-    if (props.isPlacingWaypoint) {
+    if (isPlacingWaypoint) {
       setDetent(DETENT_COLLAPSED);
     }
-  }, [props.isPlacingWaypoint]);
+  }, [isPlacingWaypoint]);
 
   // When a waypoint is just placed (placement mode turns off while editing),
   // re-expand to full
   const [wasPlacing, setWasPlacing] = useState(false);
   useEffect(() => {
-    if (props.isPlacingWaypoint) {
+    if (isPlacingWaypoint) {
       setWasPlacing(true);
     } else if (wasPlacing && isEditing) {
-      // Placement just ended and we're still editing — waypoint was placed
       setDetent(DETENT_FULL);
       setLastOpenDetent(DETENT_FULL);
       setWasPlacing(false);
     }
-  }, [props.isPlacingWaypoint, wasPlacing, isEditing]);
+  }, [isPlacingWaypoint, wasPlacing, isEditing]);
 
-  // When going back from editor to list, show half
-  const originalOnBack = props.onBack;
-  function handleBack() {
-    originalOnBack();
-    setDetent(DETENT_HALF);
-    setLastOpenDetent(DETENT_HALF);
-  }
+  // Override onBack to also update sheet detent
+  const mobileCtxValue = useMemo(() => ({
+    ...ctx,
+    onBack: () => {
+      ctx.onBack();
+      setDetent(DETENT_HALF);
+      setLastOpenDetent(DETENT_HALF);
+    },
+  }), [ctx]);
 
   // Toggle the tray: if open, collapse (remembering position); if collapsed, restore
   function handleHandleTap() {
-    if (props.isPlacingWaypoint) return; // don't expand during placement
+    if (isPlacingWaypoint) return;
 
     const isCurrentlyCollapsed = detent <= DETENT_COLLAPSED + 2;
 
     if (isCurrentlyCollapsed) {
-      // Restore to the last open position
       setDetent(lastOpenDetent);
     } else {
-      // Save current position and collapse
       setLastOpenDetent(detent);
       setDetent(DETENT_COLLAPSED);
     }
@@ -118,12 +91,12 @@ export default function MobileSheet(props: MobileSheetProps) {
 
   // Determine what to show in the collapsed bar
   function collapsedText(): string {
-    if (props.isPlacingWaypoint) {
-      const wpNum = (props.workingCopy?.waypoints.length ?? 0) + 1;
+    if (isPlacingWaypoint) {
+      const wpNum = (workingCopy?.waypoints.length ?? 0) + 1;
       return `Tap map to place waypoint ${wpNum}`;
     }
     if (isEditing) {
-      return `${props.workingCopy!.code} · ${props.workingCopy!.name}`;
+      return `${workingCopy!.code} · ${workingCopy!.name}`;
     }
     if (activeMissionCount === 0) {
       return 'No active missions';
@@ -162,7 +135,7 @@ export default function MobileSheet(props: MobileSheetProps) {
             style={{
               fontSize: 11,
               fontWeight: 500,
-              color: props.isPlacingWaypoint ? '#2FD8CF' : '#6A7E97',
+              color: isPlacingWaypoint ? '#2FD8CF' : '#6A7E97',
               textAlign: 'center',
             }}
           >
@@ -175,36 +148,11 @@ export default function MobileSheet(props: MobileSheetProps) {
       {!isCollapsed && (
         <div className="flex-1 overflow-hidden">
           {isEditing ? (
-            <MissionEditor
-              mission={props.workingCopy!}
-              isDirty={props.isDirty}
-              selectedWaypointId={props.selectedWaypointId}
-              onBack={handleBack}
-              onUpdateName={props.onUpdateName}
-              onUpdateStatus={props.onUpdateStatus}
-              onUpdateColor={props.onUpdateColor}
-              onSelectWaypoint={props.onSelectWaypoint}
-              onRenameWaypoint={props.onRenameWaypoint}
-              onUpdateWaypointCoords={props.onUpdateWaypointCoords}
-              onReorderWaypoints={props.onReorderWaypoints}
-              onImportMission={props.onImportMission}
-              onDeleteWaypoint={props.onDeleteWaypoint}
-              onAddWaypoint={props.onAddWaypoint}
-              onSave={props.onSave}
-              onDiscard={props.onDiscard}
-              isPlacingWaypoint={props.isPlacingWaypoint}
-            />
+            <MissionContext.Provider value={mobileCtxValue}>
+              <MissionEditor />
+            </MissionContext.Provider>
           ) : (
-            <MissionList
-              missions={props.missions}
-              selectedMissionId={props.selectedMissionId}
-              onSelect={props.onSelectMission}
-              onEdit={props.onEditMission}
-              onFocus={props.onFocusMission}
-              onDelete={props.onDeleteMission}
-              onSetStatus={props.onSetMissionStatus}
-              onCreate={props.onCreateMission}
-            />
+            <MissionList />
           )}
         </div>
       )}

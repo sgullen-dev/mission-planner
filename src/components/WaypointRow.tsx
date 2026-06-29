@@ -4,6 +4,7 @@ import { formatCoords, formatLat, formatLng } from '../lib/coords';
 import { INPUT_STYLE, inputFocusHandlers } from '../lib/constants';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useMissionContext } from '../context/MissionContext';
 
 interface WaypointRowProps {
   waypoint: Waypoint;
@@ -12,10 +13,6 @@ interface WaypointRowProps {
   /** Formatted leg distance from the previous waypoint, or null for the first waypoint */
   legLabel: string | null;
   isSelected: boolean;
-  onSelect: (id: string) => void;
-  onDelete: (id: string) => void;
-  onRename: (id: string, newName: string) => void;
-  onUpdateCoords: (id: string, lat: number, lng: number) => void;
 }
 
 /**
@@ -52,11 +49,14 @@ export default function WaypointRow({
   sequenceNumber,
   legLabel,
   isSelected,
-  onSelect,
-  onDelete,
-  onRename,
-  onUpdateCoords,
 }: WaypointRowProps) {
+  const {
+    onSelectWaypoint: onSelect,
+    onDeleteWaypoint: onDelete,
+    onRenameWaypoint: onRename,
+    onUpdateWaypointCoords: onUpdateCoords,
+  } = useMissionContext();
+
   // DDM string used by both the collapsed row and the expanded preview
   const coordsString = formatCoords(waypoint.lat, waypoint.lng);
 

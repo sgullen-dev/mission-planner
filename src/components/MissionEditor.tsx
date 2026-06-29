@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import type { Mission, MissionStatus, RouteColor } from '../lib/types';
 import { ROUTE_COLORS } from '../lib/types';
 import { BORDER_SUBTLE, DROPDOWN_STYLE, INPUT_STYLE, inputFocusHandlers } from '../lib/constants';
 import {
@@ -15,49 +14,29 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { haversineNm, routeDistanceNm, formatNm } from '../lib/distance';
+import { useMissionContext } from '../context/MissionContext';
 import StatusDropdown from './StatusDropdown';
 import WaypointRow from './WaypointRow';
 import SaveBar from './SaveBar';
 
-interface MissionEditorProps {
-  mission: Mission;
-  isDirty: boolean;
-  selectedWaypointId: string | null;
-  onBack: () => void;
-  onUpdateName: (name: string) => void;
-  onUpdateStatus: (status: MissionStatus) => void;
-  onUpdateColor: (color: RouteColor) => void;
-  onSelectWaypoint: (id: string) => void;
-  onRenameWaypoint: (id: string, name: string) => void;
-  onUpdateWaypointCoords: (id: string, lat: number, lng: number) => void;
-  onDeleteWaypoint: (id: string) => void;
-  onReorderWaypoints: (activeId: string, overId: string) => void;
-  onImportMission: (data: Partial<Mission>) => void;
-  onAddWaypoint: () => void;
-  onSave: () => void;
-  onDiscard: () => void;
-  isPlacingWaypoint: boolean;
-}
+export default function MissionEditor() {
+  const {
+    workingCopy: mission,
+    isDirty,
+    selectedWaypointId,
+    isPlacingWaypoint,
+    onBack,
+    onUpdateName,
+    onUpdateStatus,
+    onUpdateColor,
+    onSelectWaypoint,
+    onReorderWaypoints,
+    onImportMission,
+    onAddWaypoint,
+    onSave,
+    onDiscard,
+  } = useMissionContext();
 
-export default function MissionEditor({
-  mission,
-  isDirty,
-  selectedWaypointId,
-  onBack,
-  onUpdateName,
-  onUpdateStatus,
-  onUpdateColor,
-  onSelectWaypoint,
-  onRenameWaypoint,
-  onUpdateWaypointCoords,
-  onDeleteWaypoint,
-  onReorderWaypoints,
-  onImportMission,
-  onAddWaypoint,
-  onSave,
-  onDiscard,
-  isPlacingWaypoint,
-}: MissionEditorProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
@@ -84,8 +63,6 @@ export default function MissionEditor({
     }
   }
 
-  const waypointIds = mission.waypoints.map(wp => wp.id);
-
   // Color picker dropdown state
   const [isColorOpen, setIsColorOpen] = useState(false);
   const colorRef = useRef<HTMLDivElement>(null);
@@ -100,6 +77,10 @@ export default function MissionEditor({
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [isColorOpen]);
+
+  if (!mission) return null;
+
+  const waypointIds = mission.waypoints.map(wp => wp.id);
 
   return (
     <div className="flex flex-col h-full">
@@ -269,10 +250,6 @@ export default function MissionEditor({
                   sequenceNumber={index + 1}
                   legLabel={index > 0 ? formatNm(haversineNm(mission.waypoints[index - 1], waypoint)) : null}
                   isSelected={waypoint.id === selectedWaypointId}
-                  onSelect={onSelectWaypoint}
-                  onDelete={onDeleteWaypoint}
-                  onRename={onRenameWaypoint}
-                  onUpdateCoords={onUpdateWaypointCoords}
                 />
               ))}
             </SortableContext>

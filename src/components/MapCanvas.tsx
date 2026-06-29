@@ -3,6 +3,7 @@ import Map, { Marker, Source, Layer } from 'react-map-gl/mapbox';
 import type { MapRef, MapMouseEvent } from 'react-map-gl/mapbox';
 import type { Feature, LineString } from 'geojson';
 import type { Mission, Waypoint } from '../lib/types';
+import { useMissionContext } from '../context/MissionContext';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 const MAP_STYLE = 'mapbox://styles/mapbox/dark-v11';
@@ -24,35 +25,20 @@ function makeRouteStyle(id: string, color: string, opacity = 0.9, width = 2.2): 
   };
 }
 
-interface MapCanvasProps {
-  /** The mission currently being edited (working copy), if any */
-  editingMission: Mission | null;
-  /** Active missions to display on the map when not editing */
-  activeMissions: Mission[];
-  isPlacingWaypoint: boolean;
-  selectedWaypointId: string | null;
-  /** Waypoints to fly to when focusTrigger increments */
-  focusWaypoints: Waypoint[];
-  /** Incrementing counter that triggers a fly-to on focusWaypoints */
-  focusTrigger: number;
-  onMapClick: (lng: number, lat: number) => void;
-  onWaypointDrag: (waypointId: string, lng: number, lat: number) => void;
-  onWaypointDragEnd: (waypointId: string, lng: number, lat: number) => void;
-  onSelectWaypoint: (id: string) => void;
-}
+export default function MapCanvas() {
+  const {
+    workingCopy: editingMission,
+    activeMissions,
+    isPlacingWaypoint,
+    selectedWaypointId,
+    focusWaypoints,
+    focusTrigger,
+    onMapClick,
+    onWaypointDrag,
+    onWaypointDragEnd,
+    onSelectWaypoint,
+  } = useMissionContext();
 
-export default function MapCanvas({
-  editingMission,
-  activeMissions,
-  isPlacingWaypoint,
-  selectedWaypointId,
-  focusWaypoints,
-  focusTrigger,
-  onMapClick,
-  onWaypointDrag,
-  onWaypointDragEnd,
-  onSelectWaypoint,
-}: MapCanvasProps) {
   const mapRef = useRef<MapRef>(null);
   // Tracks whether any marker is currently being dragged.
   // While true, the "fly to selected waypoint" effect is suppressed
