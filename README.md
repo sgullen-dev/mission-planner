@@ -6,7 +6,7 @@ persist client-side via `localStorage`.
 
 Built with React 19, TypeScript, Vite, and `react-map-gl` (Mapbox GL JS).
 
-**[Live demo](https://mission-planner-sigma.vercel.app/)** — deployed on Vercel.
+**[Live demo](https://mission-planner-sigma.vercel.app/)**, deployed on Vercel.
 
 ## Setup
 
@@ -72,13 +72,16 @@ A few things outside the brief that fit a maritime C2 tool and were low-cost to 
 <summary>Documents</summary>
 
 **Visual Identity**
+
 ![Colors and Visual Identity](./docs/design_color_components.jpg)
 
 **Desktop**
+
 ![Desktop Display](./docs/desktop_design.jpg)
 ![Desktop Editor](./docs/desktop_design_with_changes.jpg)
 
 **Mobile**
+
 ![Mobile](./docs/phone_design.jpg)
 
 </details>
